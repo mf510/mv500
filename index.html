@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MV500 - Master Verbs</title>
+    <style>
+        :root { --lv1: #95a5a6; --lv2: #ff7675; --lv3: #fd9644; --lv4: #2ed573; --lv5: #70a1ff; --bg: #f0f2f5; --main-blue: #3498db; }
+        body { font-family: 'Segoe UI', Meiryo, sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 30px; }
+        
+        .header-banner { background-color: #FF8C00; padding: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .logo-text { font-size: 1.8rem; font-weight: 900; color: white; }
+        .logo-m { color: #007bff; } .logo-v { color: #ff4757; } .logo-500 { color: #2ed573; }
+        .ai-note { display: block; color: rgba(255,255,255,0.95); font-size: 0.65rem; font-weight: bold; margin-top: 5px; }
+        
+        .container { max-width: 500px; margin: 15px auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .purpose { font-size: 0.9rem; font-weight: bold; color: #333; text-align: center; margin-bottom: 20px; }
+        .level-desc { font-size: 0.85rem; color: #666; background: #fff3e0; padding: 10px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #FF8C00; }
+
+        .level-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 20px; }
+        .level-col { display: flex; flex-direction: row; align-items: center; gap: 1px; }
+        .level-col button { border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; padding: 6px 0; flex: 1; font-size: 0.8rem; }
+        .hint-btn { background: #eee !important; color: #333 !important; font-size: 0.65rem !important; flex: 0 0 20px !important; }
+        
+        .top-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+        .help-btn { background: #444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .status-container { background: #e1f5fe; padding: 5px; border-radius: 8px; display: flex; gap: 4px; flex-grow: 1; justify-content: center; }
+        .status-btn { background: white; border: 1px solid #81d4fa; border-radius: 4px; padding: 4px 6px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; justify-content: center; flex: 1; }
+        
+        .card { background: white; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; position: relative; }
+        .verb-header { font-weight: bold; font-size: 1.1rem; margin-bottom: 2px; }
+        .conj-text { font-size: 0.85rem; color: #555; margin-bottom: 8px; display: block; }
+        .example-line { display: flex; align-items: center; gap: 10px; }
+        .example-text { flex-grow: 1; font-size: 0.95rem; font-weight: bold; }
+        .action-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .eval-btns button { border: 1px solid #ccc; background: white; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; }
+        .eval-btns button.active { background: var(--main-blue); color: white; border-color: var(--main-blue); font-weight: bold; }
+        .ja-btn { background: #eee; border: 1px solid #ccc; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .ja { position: absolute; bottom: 55px; right: 10px; background: var(--main-blue); color: white; padding: 8px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; display: none; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .list-item { padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header-banner">
+    <div class="logo-text"><span class="logo-m">M</span><span class="logo-v">V</span><span class="logo-500">500</span></div>
+    <span class="ai-note">AI不使用・低消費電力設計</span>
+</div>
+
+<div class="container">
+    <div class="purpose">最重要動詞500語をレベルごとにマスターしよう！</div>
+    <div class="level-grid" id="levelGrid"></div>
+    <div class="top-nav">
+        <button class="help-btn" onclick="showHelp()">ヘルプ</button>
+        <div class="status-container" id="statusBox"></div>
+    </div>
+    <div id="wordList"></div>
+</div>
+
+<script>
+    const levels = {
+        100: "超頻出！日常会話で最も使われる基礎動詞100選",
+        200: "表現力アップ！文のバリエーションを広げる動詞100選",
+        300: "ビジネス・ニュース対応！中級レベルの重要動詞100選",
+        400: "語彙を深める！ニュアンスを伝える高度な動詞100選",
+        500: "完璧なマスターへ！高度な読解を支える動詞100選"
+    };
+
+const allVerbs = [
+// 超頻出！日常会話で最も使われる基礎動詞100選
+    {id:1, lv:100, base:"be", conj:"be, was/were, been, is/am/are, being", ex:"I am a student.", trans:"私は学生です。"},
+    {id:2, lv:100, base:"have", conj:"have, had, had, has, having", ex:"I have a pen.", trans:"私はペンを持っている。"},
+    {id:3, lv:100, base:"do", conj:"do, did, done, does, doing", ex:"I do my homework.", trans:"私は宿題をする。"},
+    {id:4, lv:100, base:"say", conj:"say, said, said, says, saying", ex:"He said hello.", trans:"彼は挨拶した。"},
+    {id:5, lv:100, base:"go", conj:"go, went, gone, goes, going", ex:"I go to school.", trans:"私は学校に行く。"},
+    {id:6, lv:100, base:"get", conj:"get, got, got, gets, getting", ex:"I get a gift.", trans:"私はプレゼントをもらう。"},
+    {id:7, lv:100, base:"make", conj:"make, made, made, makes, making", ex:"She makes lunch.", trans:"彼女は昼食を作る。"},
+    {id:8, lv:100, base:"know", conj:"know, knew, known, knows, knowing", ex:"I know him.", trans:"私は彼を知っている。"},
+    {id:9, lv:100, base:"take", conj:"take, took, taken, takes, taking", ex:"I take a photo.", trans:"私は写真を撮る。"},
+    {id:10, lv:100, base:"see", conj:"see, saw, seen, sees, seeing", ex:"I see a bird.", trans:"私は鳥を見る。"},
+    {id:11, lv:100, base:"come", conj:"come, came, come, comes, coming", ex:"They come here.", trans:"彼らはここに来る。"},
+    {id:12, lv:100, base:"think", conj:"think, thought, thought, thinks, thinking", ex:"I think so.", trans:"私はそう思う。"},
+    {id:13, lv:100, base:"look", conj:"look, looked, looked, looks, looking", ex:"I look at him.", trans:"私は彼を見る。"},
+    {id:14, lv:100, base:"want", conj:"want, wanted, wanted, wants, wanting", ex:"I want water.", trans:"私は水が欲しい。"},
+    {id:15, lv:100, base:"give", conj:"give, gave, given, gives, giving", ex:"I give him a gift.", trans:"私は彼にプレゼントをあげる。"},
+    {id:16, lv:100, base:"use", conj:"use, used, used, uses, using", ex:"I use this pen.", trans:"私はこのペンを使う。"},
+    {id:17, lv:100, base:"find", conj:"find, found, found, finds, finding", ex:"I find the key.", trans:"私は鍵を見つける。"},
+    {id:18, lv:100, base:"tell", conj:"tell, told, told, tells, telling", ex:"I tell the truth.", trans:"私は真実を話す。"},
+    {id:19, lv:100, base:"ask", conj:"ask, asked, asked, asks, asking", ex:"I ask a question.", trans:"私は質問をする。"},
+    {id:20, lv:100, base:"work", conj:"work, worked, worked, works, working", ex:"I work hard.", trans:"私は一生懸命働く。"},
+    {id:21, lv:100, base:"seem", conj:"seem, seemed, seemed, seems, seeming", ex:"You seem happy.", trans:"あなたは幸せそうに見える。"},
+    {id:22, lv:100, base:"feel", conj:"feel, felt, felt, feels, feeling", ex:"I feel cold.", trans:"私は寒いと感じる。"},
+    {id:23, lv:100, base:"try", conj:"try, tried, tried, tries, trying", ex:"I try my best.", trans:"私はベストを尽くす。"},
+    {id:24, lv:100, base:"leave", conj:"leave, left, left, leaves, leaving", ex:"I leave the room.", trans:"私は部屋を出る。"},
+    {id:25, lv:100, base:"call", conj:"call, called, called, calls, calling", ex:"I call him later.", trans:"私は後で彼に電話する。"},
+    {id:26, lv:100, base:"keep", conj:"keep, kept, kept, keeps, keeping", ex:"Don't keep it secret.", trans:"秘密にしないで。"},
+    {id:27, lv:100, base:"show", conj:"show, showed, shown, shows, showing", ex:"I show you that.", trans:"私はあなたにそれを見せる。"},
+    {id:28, lv:100, base:"mean", conj:"mean, meant, meant, means, meaning", ex:"It means a lot.", trans:"それはとても大きな意味がある。"},
+    {id:29, lv:100, base:"play", conj:"play, played, played, plays, playing", ex:"I play the piano.", trans:"私はピアノを弾く。"},
+    {id:30, lv:100, base:"run", conj:"run, ran, run, runs, running", ex:"I run fast.", trans:"私は速く走る。"},
+    {id:31, lv:100, base:"move", conj:"move, moved, moved, moves, moving", ex:"I move the chair.", trans:"私は椅子を動かす。"},
+    {id:32, lv:100, base:"live", conj:"live, lived, lived, lives, living", ex:"I live here.", trans:"私はここに住んでいる。"},
+    {id:33, lv:100, base:"believe", conj:"believe, believed, believed, believes, believing", ex:"I believe you.", trans:"私はあなたを信じる。"},
+    {id:34, lv:100, base:"bring", conj:"bring, brought, brought, brings, bringing", ex:"I bring some food.", trans:"私は食べ物を持ってくる。"},
+    {id:35, lv:100, base:"happen", conj:"happen, happened, happened, happens, happening", ex:"What happened?", trans:"何が起きたの？"},
+    {id:36, lv:100, base:"write", conj:"write, wrote, written, writes, writing", ex:"I write it down.", trans:"私はそれを書き留める。"},
+    {id:37, lv:100, base:"sit", conj:"sit, sat, sat, sits, sitting", ex:"I sit on the chair.", trans:"私は椅子に座る。"},
+    {id:38, lv:100, base:"stand", conj:"stand, stood, stood, stands, standing", ex:"I stand up here.", trans:"私はここに立つ。"},
+    {id:39, lv:100, base:"lose", conj:"lose, lost, lost, loses, losing", ex:"Don't lose hope.", trans:"希望を失わないで。"},
+    {id:40, lv:100, base:"pay", conj:"pay, paid, paid, pays, paying", ex:"I pay the bill.", trans:"私は勘定を払う。"},
+    {id:41, lv:100, base:"meet", conj:"meet, met, met, meets, meeting", ex:"I meet my friend.", trans:"私は友達に会う。"},
+    {id:42, lv:100, base:"learn", conj:"learn, learned, learned, learns, learning", ex:"I learn English.", trans:"私は英語を学ぶ。"},
+    {id:43, lv:100, base:"change", conj:"change, changed, changed, changes, changing", ex:"I change the plan.", trans:"私は計画を変える。"},
+    {id:44, lv:100, base:"buy", conj:"buy, bought, bought, buys, buying", ex:"I buy a new car.", trans:"私は新しい車を買う。"},
+    {id:45, lv:100, base:"send", conj:"send, sent, sent, sends, sending", ex:"I send an email.", trans:"私はメールを送る。"},
+    {id:46, lv:100, base:"walk", conj:"walk, walked, walked, walks, walking", ex:"I walk to school.", trans:"私は学校まで歩く。"},
+    {id:47, lv:100, base:"talk", conj:"talk, talked, talked, talks, talking", ex:"I talk to him.", trans:"私は彼と話す。"},
+    {id:48, lv:100, base:"follow", conj:"follow, followed, followed, follows, following", ex:"I follow the rules.", trans:"私はルールに従う。"},
+    {id:49, lv:100, base:"stop", conj:"stop, stopped, stopped, stops, stopping", ex:"I stop the car.", trans:"私は車を止める。"},
+    {id:50, lv:100, base:"help", conj:"help, helped, helped, helps, helping", ex:"I help him now.", trans:"私は今彼を助ける。"}, // ここにカンマが必要です！
+    {id:51, lv:100, base:"start", conj:"start, started, started, starts, starting", ex:"I start my work.", trans:"私は仕事を始める。"},
+    {id:52, lv:100, base:"show", conj:"show, showed, shown, shows, showing", ex:"I show him the way.", trans:"私は彼に道を見せる。"},
+    {id:53, lv:100, base:"hear", conj:"hear, heard, heard, hears, hearing", ex:"I hear a sound.", trans:"私は音が聞こえる。"},
+    {id:54, lv:100, base:"play", conj:"play, played, played, plays, playing", ex:"I play with him.", trans:"私は彼と遊ぶ。"},
+    {id:55, lv:100, base:"move", conj:"move, moved, moved, moves, moving", ex:"I move to Tokyo.", trans:"私は東京に引っ越す。"},
+    {id:56, lv:100, base:"live", conj:"live, lived, lived, lives, living", ex:"I live in Japan.", trans:"私は日本に住んでいる。"},
+    {id:57, lv:100, base:"believe", conj:"believe, believed, believed, believes, believing", ex:"I believe in you.", trans:"私はあなたを信じている。"},
+    {id:58, lv:100, base:"bring", conj:"bring, brought, brought, brings, bringing", ex:"I bring a gift.", trans:"私はプレゼントを持ってくる。"},
+    {id:59, lv:100, base:"happen", conj:"happen, happened, happened, happens, happening", ex:"Good things happen.", trans:"良いことが起こる。"},
+    {id:60, lv:100, base:"write", conj:"write, wrote, written, writes, writing", ex:"I write a letter.", trans:"私は手紙を書く。"},
+    {id:61, lv:100, base:"sit", conj:"sit, sat, sat, sits, sitting", ex:"I sit on the sofa.", trans:"私はソファに座る。"},
+    {id:62, lv:100, base:"stand", conj:"stand, stood, stood, stands, standing", ex:"I stand in line.", trans:"私は列に並ぶ。"},
+    {id:63, lv:100, base:"lose", conj:"lose, lost, lost, loses, losing", ex:"I lose my way.", trans:"私は道に迷う。"},
+    {id:64, lv:100, base:"pay", conj:"pay, paid, paid, pays, paying", ex:"I pay by card.", trans:"私はカードで支払う。"},
+    {id:65, lv:100, base:"meet", conj:"meet, met, met, meets, meeting", ex:"I meet my teacher.", trans:"私は先生に会う。"},
+    {id:66, lv:100, base:"learn", conj:"learn, learned, learned, learns, learning", ex:"I learn to cook.", trans:"私は料理を習う。"},
+    {id:67, lv:100, base:"change", conj:"change, changed, changed, changes, changing", ex:"I change my clothes.", trans:"私は服を着替える。"},
+    {id:68, lv:100, base:"buy", conj:"buy, bought, bought, buys, buying", ex:"I buy some bread.", trans:"私はパンを買う。"},
+    {id:69, lv:100, base:"send", conj:"send, sent, sent, sends, sending", ex:"I send a gift.", trans:"私はプレゼントを送る。"},
+    {id:70, lv:100, base:"walk", conj:"walk, walked, walked, walks, walking", ex:"I walk with him.", trans:"私は彼と一緒に歩く。"},
+    {id:71, lv:100, base:"talk", conj:"talk, talked, talked, talks, talking", ex:"I talk with her.", trans:"私は彼女と話す。"},
+    {id:72, lv:100, base:"follow", conj:"follow, followed, followed, follows, following", ex:"I follow my dream.", trans:"私は夢を追う。"},
+    {id:73, lv:100, base:"stop", conj:"stop, stopped, stopped, stops, stopping", ex:"I stop at the park.", trans:"私は公園に立ち寄る。"},
+    {id:74, lv:100, base:"help", conj:"help, helped, helped, helps, helping", ex:"I help my mom.", trans:"私は母を手伝う。"},
+    {id:75, lv:100, base:"check", conj:"check, checked, checked, checks, checking", ex:"I check the time.", trans:"私は時間を確認する。"},
+    {id:76, lv:100, base:"cook", conj:"cook, cooked, cooked, cooks, cooking", ex:"I cook dinner.", trans:"私は夕食を作る。"},
+    {id:77, lv:100, base:"clean", conj:"clean, cleaned, cleaned, cleans, cleaning", ex:"I clean my room.", trans:"私は部屋を掃除する。"},
+    {id:78, lv:100, base:"open", conj:"open, opened, opened, opens, opening", ex:"I open the door.", trans:"私はドアを開ける。"},
+    {id:79, lv:100, base:"close", conj:"close, closed, closed, closes, closing", ex:"I close the book.", trans:"私は本を閉じる。"},
+    {id:80, lv:100, base:"carry", conj:"carry, carried, carried, carries, carrying", ex:"I carry a bag.", trans:"私はかばんを持つ。"},
+    {id:81, lv:100, base:"watch", conj:"watch, watched, watched, watches, watching", ex:"I watch TV.", trans:"私はテレビを見る。"},
+    {id:82, lv:100, base:"listen", conj:"listen, listened, listened, listens, listening", ex:"I listen to music.", trans:"私は音楽を聴く。"},
+    {id:83, lv:100, base:"enjoy", conj:"enjoy, enjoyed, enjoyed, enjoys, enjoying", ex:"I enjoy life.", trans:"私は人生を楽しむ。"},
+    {id:84, lv:100, base:"finish", conj:"finish, finished, finished, finishes, finishing", ex:"I finish my work.", trans:"私は仕事を終える。"},
+    {id:85, lv:100, base:"visit", conj:"visit, visited, visited, visits, visiting", ex:"I visit my friend.", trans:"私は友達を訪ねる。"},
+    {id:86, lv:100, base:"travel", conj:"travel, traveled, traveled, travels, traveling", ex:"I travel abroad.", trans:"私は海外へ旅行する。"},
+    {id:87, lv:100, base:"spend", conj:"spend, spent, spent, spends, spending", ex:"I spend time here.", trans:"私はここで時間を過ごす。"},
+    {id:88, lv:100, base:"keep", conj:"keep, kept, kept, keeps, keeping", ex:"I keep a dog.", trans:"私は犬を飼っている。"},
+    {id:89, lv:100, base:"wait", conj:"wait, waited, waited, waits, waiting", ex:"I wait for you.", trans:"私はあなたを待つ。"},
+    {id:90, lv:100, base:"return", conj:"return, returned, returned, returns, returning", ex:"I return home.", trans:"私は家に帰る。"},
+    {id:91, lv:100, base:"need", conj:"need, needed, needed, needs, needing", ex:"I need some sleep.", trans:"私は睡眠が必要だ。"},
+    {id:92, lv:100, base:"become", conj:"become, became, become, becomes, becoming", ex:"I become a doctor.", trans:"私は医者になる。"},
+    {id:93, lv:100, base:"grow", conj:"grow, grew, grown, grows, growing", ex:"I grow flowers.", trans:"私は花を育てる。"},
+    {id:94, lv:100, base:"build", conj:"build, built, built, builds, building", ex:"I build a house.", trans:"私は家を建てる。"},
+    {id:95, lv:100, base:"catch", conj:"catch, caught, caught, catches, catching", ex:"I catch the ball.", trans:"私はボールを捕る。"},
+    {id:96, lv:100, base:"hold", conj:"hold, held, held, holds, holding", ex:"I hold her hand.", trans:"私は彼女の手を握る。"},
+    {id:97, lv:100, base:"pass", conj:"pass, passed, passed, passes, passing", ex:"I pass the exam.", trans:"私は試験に合格する。"},
+    {id:98, lv:100, base:"share", conj:"share, shared, shared, shares, sharing", ex:"I share my food.", trans:"私は食べ物を分け合う。"},
+    {id:99, lv:100, base:"prepare", conj:"prepare, prepared, prepared, prepares, preparing", ex:"I prepare dinner.", trans:"私は夕食の準備をする。"},
+    {id:100, lv:100, base:"happen", conj:"happen, happened, happened, happens, happening", ex:"Things happen fast.", trans:"物事は速く起こる。"},
+// Lv200: 表現力アップ！文のバリエーションを広げる動詞100選
+    {id:101, lv:200, base:"decide", conj:"decide, decided, decided, decides, deciding", ex:"I decide the plan.", trans:"私は計画を決定する。"},
+    {id:102, lv:200, base:"understand", conj:"understand, understood, understood, understands, understanding", ex:"I understand you.", trans:"私はあなたの言うことがわかる。"},
+    {id:103, lv:200, base:"happen", conj:"happen, happened, happened, happens, happening", ex:"It happens often.", trans:"それはよくあることだ。"},
+    {id:104, lv:200, base:"suggest", conj:"suggest, suggested, suggested, suggests, suggesting", ex:"I suggest a break.", trans:"私は休憩を提案する。"},
+    {id:105, lv:200, base:"explain", conj:"explain, explained, explained, explains, explaining", ex:"I explain the rule.", trans:"私はルールを説明する。"},
+    {id:106, lv:200, base:"expect", conj:"expect, expected, expected, expects, expecting", ex:"I expect a call.", trans:"私は電話を待っている。"},
+    {id:107, lv:200, base:"provide", conj:"provide, provided, provided, provides, providing", ex:"I provide food.", trans:"私は食事を提供する。"},
+    {id:108, lv:200, base:"continue", conj:"continue, continued, continued, continues, continuing", ex:"I continue my study.", trans:"私は勉強を続ける。"},
+    {id:109, lv:200, base:"include", conj:"include, included, included, includes, including", ex:"It includes tax.", trans:"それには税金が含まれる。"},
+    {id:110, lv:200, base:"offer", conj:"offer, offered, offered, offers, offering", ex:"I offer my help.", trans:"私は手助けを申し出る。"},
+    {id:111, lv:200, base:"consider", conj:"consider, considered, considered, considers, considering", ex:"I consider it.", trans:"私はそれを検討する。"},
+    {id:112, lv:200, base:"appear", conj:"appear, appeared, appeared, appears, appearing", ex:"He appears calm.", trans:"彼は冷静に見える。"},
+    {id:113, lv:200, base:"remain", conj:"remain, remained, remained, remains, remaining", ex:"I remain here.", trans:"私はここにとどまる。"},
+    {id:114, lv:200, base:"reach", conj:"reach, reached, reached, reaches, reaching", ex:"I reach the top.", trans:"私は頂上に達する。"},
+    {id:115, lv:200, base:"prepare", conj:"prepare, prepared, prepared, prepares, preparing", ex:"I prepare for it.", trans:"私はその準備をする。"},
+    {id:116, lv:200, base:"develop", conj:"develop, developed, developed, develops, developing", ex:"I develop a skill.", trans:"私はスキルを伸ばす。"},
+    {id:117, lv:200, base:"receive", conj:"receive, received, received, receives, receiving", ex:"I receive a gift.", trans:"私は贈り物を受け取る。"},
+    {id:118, lv:200, base:"join", conj:"join, joined, joined, joins, joining", ex:"I join the team.", trans:"私はチームに参加する。"},
+    {id:119, lv:200, base:"create", conj:"create, created, created, creates, creating", ex:"I create a file.", trans:"私はファイルを作成する。"},
+    {id:120, lv:120, base:"allow", conj:"allow, allowed, allowed, allows, allowing", ex:"I allow it.", trans:"私はそれを許可する。"},
+    {id:121, lv:200, base:"prevent", conj:"prevent, prevented, prevented, prevents, preventing", ex:"I prevent errors.", trans:"私はエラーを防ぐ。"},
+    {id:122, lv:200, base:"improve", conj:"improve, improved, improved, improves, improving", ex:"I improve my English.", trans:"私は英語を上達させる。"},
+    {id:123, lv:200, base:"notice", conj:"notice, noticed, noticed, notices, noticing", ex:"I notice a change.", trans:"私は変化に気づく。"},
+    {id:124, lv:200, base:"realize", conj:"realize, realized, realized, realizes, realizing", ex:"I realize the truth.", trans:"私は真実に気づく。"},
+    {id:125, lv:200, base:"control", conj:"control, controlled, controlled, controls, controlling", ex:"I control my speed.", trans:"私は速度を制御する。"},
+    {id:126, lv:200, base:"support", conj:"support, supported, supported, supports, supporting", ex:"I support you.", trans:"私はあなたを支持する。"},
+    {id:127, lv:200, base:"base", conj:"base, based, based, bases, basing", ex:"It is based on fact.", trans:"それは事実に基づいている。"},
+    {id:128, lv:200, base:"produce", conj:"produce, produced, produced, produces, producing", ex:"I produce goods.", trans:"私は製品を生産する。"},
+    {id:129, lv:200, base:"increase", conj:"increase, increased, increased, increases, increasing", ex:"I increase the size.", trans:"私はサイズを増やす。"},
+    {id:130, lv:200, base:"reduce", conj:"reduce, reduced, reduced, reduces, reducing", ex:"I reduce the cost.", trans:"私は費用を減らす。"},
+    {id:131, lv:200, base:"manage", conj:"manage, managed, managed, manages, managing", ex:"I manage the store.", trans:"私は店を経営する。"},
+    {id:132, lv:200, base:"design", conj:"design, designed, designed, designs, designing", ex:"I design a page.", trans:"私はページを設計する。"},
+    {id:133, lv:200, base:"achieve", conj:"achieve, achieved, achieved, achieves, achieving", ex:"I achieve the goal.", trans:"私は目標を達成する。"},
+    {id:134, lv:200, base:"define", conj:"define, defined, defined, defines, defining", ex:"I define the word.", trans:"私は言葉を定義する。"},
+    {id:135, lv:200, base:"claim", conj:"claim, claimed, claimed, claims, claiming", ex:"I claim it is true.", trans:"私はそれが真実だと主張する。"},
+    {id:136, lv:200, base:"discuss", conj:"discuss, discussed, discussed, discusses, discussing", ex:"I discuss the plan.", trans:"私は計画を議論する。"},
+    {id:137, lv:200, base:"record", conj:"record, recorded, recorded, records, recording", ex:"I record the meeting.", trans:"私は会議を記録する。"},
+    {id:138, lv:200, base:"approach", conj:"approach, approached, approached, approaches, approaching", ex:"I approach the gate.", trans:"私は門に近づく。"},
+    {id:139, lv:200, base:"compare", conj:"compare, compared, compared, compares, comparing", ex:"I compare prices.", trans:"私は価格を比較する。"},
+    {id:140, lv:200, base:"gather", conj:"gather, gathered, gathered, gathers, gathering", ex:"I gather data.", trans:"私はデータを集める。"},
+    {id:141, lv:200, base:"remind", conj:"remind, reminded, reminded, reminds, reminding", ex:"You remind me of him.", trans:"あなたを見ると彼を思い出す。"},
+    {id:142, lv:200, base:"select", conj:"select, selected, selected, selects, selecting", ex:"I select an option.", trans:"私は選択肢を選ぶ。"},
+    {id:143, lv:200, base:"operate", conj:"operate, operated, operated, operates, operating", ex:"I operate the machine.", trans:"私は機械を操作する。"},
+    {id:144, lv:200, base:"involve", conj:"involve, involved, involved, involves, involving", ex:"It involves risk.", trans:"それにはリスクが伴う。"},
+    {id:145, lv:200, base:"organize", conj:"organize, organized, organized, organizes, organizing", ex:"I organize my files.", trans:"私はファイルを整理する。"},
+    {id:146, lv:200, base:"solve", conj:"solve, solved, solved, solves, solving", ex:"I solve the puzzle.", trans:"私はパズルを解く。"},
+    {id:147, lv:200, base:"observe", conj:"observe, observed, observed, observes, observing", ex:"I observe the stars.", trans:"私は星を観察する。"},
+    {id:148, lv:200, base:"confirm", conj:"confirm, confirmed, confirmed, confirms, confirming", ex:"I confirm the date.", trans:"私は日付を確認する。"},
+    {id:149, lv:200, base:"recognize", conj:"recognize, recognized, recognized, recognizes, recognizing", ex:"I recognize his face.", trans:"私は彼の顔を見覚えがある。"},
+    {id:150, lv:200, base:"depend", conj:"depend, depended, depended, depends, depending", ex:"It depends on you.", trans:"それはあなた次第だ。"},
+    {id:151, lv:200, base:"avoid", conj:"avoid, avoided, avoided, avoids, avoiding", ex:"I avoid the mistake.", trans:"私はそのミスを避ける。"},
+    {id:152, lv:200, base:"protect", conj:"protect, protected, protected, protects, protecting", ex:"I protect my family.", trans:"私は家族を守る。"},
+    {id:153, lv:200, base:"require", conj:"require, required, required, requires, requiring", ex:"It requires time.", trans:"それには時間がかかる。"},
+    {id:154, lv:200, base:"suggest", conj:"suggest, suggested, suggested, suggests, suggesting", ex:"I suggest a new idea.", trans:"私は新しいアイデアを提案する。"},
+    {id:155, lv:200, base:"maintain", conj:"maintain, maintained, maintained, maintains, maintaining", ex:"I maintain the system.", trans:"私はシステムを維持する。"},
+    {id:156, lv:200, base:"promote", conj:"promote, promoted, promoted, promotes, promoting", ex:"I promote the event.", trans:"私はイベントを促進する。"},
+    {id:157, lv:200, base:"express", conj:"express, expressed, expressed, expresses, expressing", ex:"I express my thanks.", trans:"私は感謝を表現する。"},
+    {id:158, lv:200, base:"represent", conj:"represent, represented, represented, represents, representing", ex:"I represent the group.", trans:"私はグループを代表する。"},
+    {id:159, lv:200, base:"acquire", conj:"acquire, acquired, acquired, acquires, acquiring", ex:"I acquire knowledge.", trans:"私は知識を習得する。"},
+    {id:160, lv:200, base:"evaluate", conj:"evaluate, evaluated, evaluated, evaluates, evaluating", ex:"I evaluate the result.", trans:"私は結果を評価する。"},
+    {id:161, lv:200, base:"adapt", conj:"adapt, adapted, adapted, adapts, adapting", ex:"I adapt to the change.", trans:"私は変化に適応する。"},
+    {id:162, lv:200, base:"address", conj:"address, addressed, addressed, addresses, addressing", ex:"I address the issue.", trans:"私は問題に対処する。"},
+    {id:163, lv:200, base:"attract", conj:"attract, attracted, attracted, attracts, attracting", ex:"I attract attention.", trans:"私は注目を集める。"},
+    {id:164, lv:200, base:"calculate", conj:"calculate, calculated, calculated, calculates, calculating", ex:"I calculate the cost.", trans:"私は費用を計算する。"},
+    {id:165, lv:200, base:"commit", conj:"commit, committed, committed, commits, committing", ex:"I commit to the task.", trans:"私はその任務に専念する。"},
+    {id:166, lv:200, base:"compose", conj:"compose, composed, composed, composes, composing", ex:"I compose a song.", trans:"私は曲を作曲する。"},
+    {id:167, lv:200, base:"construct", conj:"construct, constructed, constructed, constructs, constructing", ex:"I construct a bridge.", trans:"私は橋を建設する。"},
+    {id:168, lv:200, base:"convert", conj:"convert, converted, converted, converts, converting", ex:"I convert the file.", trans:"私はファイルを変換する。"},
+    {id:169, lv:200, base:"declare", conj:"declare, declared, declared, declares, declaring", ex:"I declare war.", trans:"私は宣戦布告する。"},
+    {id:170, lv:200, base:"demonstrate", conj:"demonstrate, demonstrated, demonstrated, demonstrates, demonstrating", ex:"I demonstrate the tool.", trans:"私は道具を実演する。"},
+    {id:171, lv:200, base:"distinguish", conj:"distinguish, distinguished, distinguished, distinguishes, distinguishing", ex:"I distinguish the two.", trans:"私はその2つを見分ける。"},
+    {id:172, lv:200, base:"eliminate", conj:"eliminate, eliminated, eliminated, eliminates, eliminating", ex:"I eliminate the error.", trans:"私はエラーを排除する。"},
+    {id:273, lv:200, base:"emphasize", conj:"emphasize, emphasized, emphasized, emphasizes, emphasizing", ex:"I emphasize the point.", trans:"私はその点を強調する。"},
+    {id:174, lv:200, base:"enable", conj:"enable, enabled, enabled, enables, enabling", ex:"It enables us to fly.", trans:"それにより私たちは飛べる。"},
+    {id:175, lv:200, base:"encounter", conj:"encounter, encountered, encountered, encounters, encountering", ex:"I encounter a problem.", trans:"私は問題に直面する。"},
+    {id:176, lv:200, base:"engage", conj:"engage, engaged, engaged, engages, engaging", ex:"I engage in business.", trans:"私は仕事に従事する。"},
+    {id:177, lv:200, base:"enhance", conj:"enhance, enhanced, enhanced, enhances, enhancing", ex:"I enhance the image.", trans:"私は画像を向上させる。"},
+    {id:178, lv:200, base:"ensure", conj:"ensure, ensured, ensured, ensures, ensuring", ex:"I ensure safety.", trans:"私は安全を保証する。"},
+    {id:179, lv:200, base:"estimate", conj:"estimate, estimated, estimated, estimates, estimating", ex:"I estimate the size.", trans:"私はサイズを推定する。"},
+    {id:180, lv:200, base:"execute", conj:"execute, executed, executed, executes, executing", ex:"I execute the program.", trans:"私はプログラムを実行する。"},
+    {id:181, lv:200, base:"expand", conj:"expand, expanded, expanded, expands, expanding", ex:"I expand the business.", trans:"私は事業を拡大する。"},
+    {id:182, lv:200, base:"extract", conj:"extract, extracted, extracted, extracts, extracting", ex:"I extract the text.", trans:"私はテキストを抽出する。"},
+    {id:183, lv:200, base:"facilitate", conj:"facilitate, facilitated, facilitated, facilitates, facilitating", ex:"I facilitate the meeting.", trans:"私は会議を円滑に進める。"},
+    {id:184, lv:200, base:"generate", conj:"generate, generated, generated, generates, generating", ex:"I generate power.", trans:"私は電気を生成する。"},
+    {id:185, lv:200, base:"identify", conj:"identify, identified, identified, identifies, identifying", ex:"I identify the cause.", trans:"私は原因を特定する。"},
+    {id:186, lv:200, base:"implement", conj:"implement, implemented, implemented, implements, implementing", ex:"I implement the plan.", trans:"私は計画を実行する。"},
+    {id:187, lv:200, base:"indicate", conj:"indicate, indicated, indicated, indicates, indicating", ex:"It indicates danger.", trans:"それは危険を示している。"},
+    {id:188, lv:200, base:"influence", conj:"influence, influenced, influenced, influences, influencing", ex:"I influence others.", trans:"私は他人に影響を与える。"},
+    {id:189, lv:200, base:"install", conj:"install, installed, installed, installs, installing", ex:"I install software.", trans:"私はソフトをインストールする。"},
+    {id:190, lv:200, base:"invest", conj:"invest, invested, invested, invests, investing", ex:"I invest money.", trans:"私はお金を投資する。"},
+    {id:191, lv:200, base:"justify", conj:"justify, justified, justified, justifies, justifying", ex:"I justify my action.", trans:"私は自分の行動を正当化する。"},
+    {id:192, lv:200, base:"launch", conj:"launch, launched, launched, launches, launching", ex:"I launch the app.", trans:"私はアプリを起動する。"},
+    {id:193, lv:200, base:"modify", conj:"modify, modified, modified, modifies, modifying", ex:"I modify the data.", trans:"私はデータを修正する。"},
+    {id:194, lv:200, base:"negotiate", conj:"negotiate, negotiated, negotiated, negotiates, negotiating", ex:"I negotiate the deal.", trans:"私は取引を交渉する。"},
+    {id:195, lv:200, base:"obtain", conj:"obtain, obtained, obtained, obtains, obtaining", ex:"I obtain a permit.", trans:"私は許可を得る。"},
+    {id:196, lv:200, base:"participate", conj:"participate, participated, participated, participates, participating", ex:"I participate in it.", trans:"私はそれ参加する。"},
+    {id:197, lv:200, base:"perceive", conj:"perceive, perceived, perceived, perceives, perceiving", ex:"I perceive a shift.", trans:"私は変化を感じ取る。"},
+    {id:198, lv:200, base:"persuade", conj:"persuade, persuaded, persuaded, persuades, persuading", ex:"I persuade him.", trans:"私は彼を説得する。"},
+    {id:199, lv:200, base:"predict", conj:"predict, predicted, predicted, predicts, predicting", ex:"I predict success.", trans:"私は成功を予測する。"},
+    {id:200, lv:200, base:"propose", conj:"propose, proposed, proposed, proposes, proposing", ex:"I propose a solution.", trans:"私は解決策を提案する。"},
+    {id:201, lv:300, base:"analyze", conj:"analyze, analyzed, analyzed, analyzes, analyzing", ex:"I analyze the data.", trans:"私はデータを分析する。"},
+    {id:202, lv:300, base:"approve", conj:"approve, approved, approved, approves, approving", ex:"I approve the budget.", trans:"私は予算を承認する。"},
+    {id:203, lv:300, base:"arrange", conj:"arrange, arranged, arranged, arranges, arranging", ex:"I arrange a meeting.", trans:"私は会議を調整する。"},
+    {id:204, lv:300, base:"assemble", conj:"assemble, assembled, assembled, assembles, assembling", ex:"I assemble the parts.", trans:"私は部品を組み立てる。"},
+    {id:205, lv:300, base:"assess", conj:"assess, assessed, assessed, assesses, assessing", ex:"I assess the risk.", trans:"私はリスクを評価する。"},
+    {id:206, lv:300, base:"assign", conj:"assign, assigned, assigned, assigns, assigning", ex:"I assign the task.", trans:"私は任務を割り当てる。"},
+    {id:207, lv:300, base:"assume", conj:"assume, assumed, assumed, assumes, assuming", ex:"I assume it is true.", trans:"私はそれが真実だと仮定する。"},
+    {id:208, lv:300, base:"attach", conj:"attach, attached, attached, attaches, attaching", ex:"I attach a file.", trans:"私はファイルを添付する。"},
+    {id:209, lv:300, base:"calculate", conj:"calculate, calculated, calculated, calculates, calculating", ex:"I calculate the total.", trans:"私は合計を計算する。"},
+    {id:210, lv:300, base:"categorize", conj:"categorize, categorized, categorized, categorizes, categorizing", ex:"I categorize the items.", trans:"私は品目を分類する。"},
+    {id:211, lv:300, base:"collaborate", conj:"collaborate, collaborated, collaborated, collaborates, collaborating", ex:"I collaborate with you.", trans:"私はあなたと協力する。"},
+    {id:212, lv:300, base:"combine", conj:"combine, combined, combined, combines, combining", ex:"I combine the ideas.", trans:"私はアイデアを組み合わせる。"},
+    {id:213, lv:300, base:"compensate", conj:"compensate, compensated, compensated, compensates, compensating", ex:"I compensate for it.", trans:"私はそれを補償する。"},
+    {id:214, lv:300, base:"complete", conj:"complete, completed, completed, completes, completing", ex:"I complete the form.", trans:"私はフォームに記入する。"},
+    {id:215, lv:300, base:"conclude", conj:"conclude, concluded, concluded, concludes, concluding", ex:"I conclude the talk.", trans:"私は話を終える。"},
+    {id:216, lv:300, base:"conduct", conj:"conduct, conducted, conducted, conducts, conducting", ex:"I conduct a survey.", trans:"私は調査を実施する。"},
+    {id:217, lv:300, base:"configure", conj:"configure, configured, configured, configures, configuring", ex:"I configure the settings.", trans:"私は設定を構成する。"},
+    {id:218, lv:300, base:"conserve", conj:"conserve, conserved, conserved, conserves, conserving", ex:"I conserve energy.", trans:"私はエネルギーを節約する。"},
+    {id:219, lv:300, base:"consolidate", conj:"consolidate, consolidated, consolidated, consolidates, consolidating", ex:"I consolidate data.", trans:"私はデータを統合する。"},
+    {id:220, lv:300, base:"consult", conj:"consult, consulted, consulted, consults, consulting", ex:"I consult a doctor.", trans:"私は医者に相談する。"},
+    {id:221, lv:300, base:"consume", conj:"consume, consumed, consumed, consumes, consuming", ex:"I consume less fat.", trans:"私は脂肪の摂取を減らす。"},
+    {id:222, lv:300, base:"contribute", conj:"contribute, contributed, contributed, contributes, contributing", ex:"I contribute to success.", trans:"私は成功に貢献する。"},
+    {id:223, lv:300, base:"coordinate", conj:"coordinate, coordinated, coordinated, coordinates, coordinating", ex:"I coordinate the project.", trans:"私はプロジェクトを調整する。"},
+    {id:224, lv:300, base:"correct", conj:"correct, corrected, corrected, corrects, correcting", ex:"I correct the mistake.", trans:"私はミスを訂正する。"},
+    {id:225, lv:300, base:"criticize", conj:"criticize, criticized, criticized, criticizes, criticizing", ex:"I criticize the plan.", trans:"私は計画を批判する。"},
+    {id:226, lv:300, base:"delegate", conj:"delegate, delegated, delegated, delegates, delegating", ex:"I delegate the work.", trans:"私は仕事を委任する。"},
+    {id:227, lv:300, base:"demonstrate", conj:"demonstrate, demonstrated, demonstrated, demonstrates, demonstrating", ex:"I demonstrate the skill.", trans:"私はスキルを実証する。"},
+    {id:228, lv:300, base:"detect", conj:"detect, detected, detected, detects, detecting", ex:"I detect a problem.", trans:"私は問題を見つけ出す。"},
+    {id:229, lv:300, base:"determine", conj:"determine, determined, determined, determines, determining", ex:"I determine the cause.", trans:"私は原因を突き止める。"},
+    {id:230, lv:300, base:"develop", conj:"develop, developed, developed, develops, developing", ex:"I develop software.", trans:"私はソフトを開発する。"},
+    {id:231, lv:300, base:"diagnose", conj:"diagnose, diagnosed, diagnosed, diagnoses, diagnosing", ex:"I diagnose the issue.", trans:"私は問題を診断する。"},
+    {id:232, lv:300, base:"differentiate", conj:"differentiate, differentiated, differentiated, differentiates, differentiating", ex:"I differentiate the two.", trans:"私は両者を区別する。"},
+    {id:233, lv:300, base:"disclose", conj:"disclose, disclosed, disclosed, discloses, disclosing", ex:"I disclose the info.", trans:"私は情報を開示する。"},
+    {id:234, lv:300, base:"distribute", conj:"distribute, distributed, distributed, distributes, distributing", ex:"I distribute flyers.", trans:"私はチラシを配布する。"},
+    {id:235, lv:300, base:"document", conj:"document, documented, documented, documents, documenting", ex:"I document the process.", trans:"私は工程を記録する。"},
+    {id:236, lv:300, base:"dominate", conj:"dominate, dominated, dominated, dominates, dominating", ex:"I dominate the field.", trans:"私はその分野を支配する。"},
+    {id:237, lv:300, base:"duplicate", conj:"duplicate, duplicated, duplicated, duplicates, duplicating", ex:"I duplicate the file.", trans:"私はファイルを複製する。"},
+    {id:238, lv:300, base:"edit", conj:"edit, edited, edited, edits, editing", ex:"I edit the document.", trans:"私は文書を編集する。"},
+    {id:239, lv:300, base:"eliminate", conj:"eliminate, eliminated, eliminated, eliminates, eliminating", ex:"I eliminate the risk.", trans:"私はリスクを除去する。"},
+    {id:240, lv:300, base:"emulate", conj:"emulate, emulated, emulated, emulates, emulating", ex:"I emulate the expert.", trans:"私は専門家を見習う。"},
+    {id:241, lv:300, base:"encourage", conj:"encourage, encouraged, encouraged, encourages, encouraging", ex:"I encourage you.", trans:"私はあなたを励ます。"},
+    {id:242, lv:300, base:"endure", conj:"endure, endured, endured, endures, enduring", ex:"I endure the pain.", trans:"私は痛みに耐える。"},
+    {id:243, lv:300, base:"enforce", conj:"enforce, enforced, enforced, enforces, enforcing", ex:"I enforce the law.", trans:"私は法律を施行する。"},
+    {id:244, lv:300, base:"enlighten", conj:"enlighten, enlightened, enlightened, enlightens, enlightening", ex:"I enlighten him.", trans:"私は彼を啓発する。"},
+    {id:245, lv:300, base:"enrich", conj:"enrich, enriched, enriched, enriches, enriching", ex:"I enrich my life.", trans:"私は人生を豊かにする。"},
+    {id:246, lv:300, base:"entertain", conj:"entertain, entertained, entertained, entertains, entertaining", ex:"I entertain guests.", trans:"私は客をもてなす。"},
+    {id:247, lv:300, base:"establish", conj:"establish, established, established, establishes, establishing", ex:"I establish the rule.", trans:"私はルールを確立する。"},
+    {id:248, lv:300, base:"evade", conj:"evade, evaded, evaded, evades, evading", ex:"I evade the question.", trans:"私は質問をはぐらかす。"},
+    {id:249, lv:300, base:"exaggerate", conj:"exaggerate, exaggerated, exaggerated, exaggerates, exaggerating", ex:"I exaggerate facts.", trans:"私は事実を誇張する。"},
+    {id:250, lv:300, base:"examine", conj:"examine, examined, examined, examines, examining", ex:"I examine the data.", trans:"私はデータを検証する。"},
+    {id:251, lv:300, base:"exceed", conj:"exceed, exceeded, exceeded, exceeds, exceeding", ex:"I exceed the limit.", trans:"私は制限を超える。"},
+    {id:252, lv:300, base:"exchange", conj:"exchange, exchanged, exchanged, exchanges, exchanging", ex:"I exchange opinions.", trans:"私は意見を交換する。"},
+    {id:253, lv:300, base:"exclude", conj:"exclude, excluded, excluded, excludes, excluding", ex:"I exclude the error.", trans:"私はエラーを除外する。"},
+    {id:254, lv:300, base:"execute", conj:"execute, executed, executed, executes, executing", ex:"I execute the task.", trans:"私は任務を遂行する。"},
+    {id:255, lv:300, base:"exhibit", conj:"exhibit, exhibited, exhibited, exhibits, exhibiting", ex:"I exhibit my art.", trans:"私は芸術を展示する。"},
+    {id:256, lv:300, base:"expand", conj:"expand, expanded, expanded, expands, expanding", ex:"I expand the scope.", trans:"私は範囲を拡大する。"},
+    {id:257, lv:300, base:"expel", conj:"expel, expelled, expelled, expels, expelling", ex:"I expel the air.", trans:"私は空気を排出する。"},
+    {id:258, lv:300, base:"experience", conj:"experience, experienced, experienced, experiences, experiencing", ex:"I experience joy.", trans:"私は喜びを経験する。"},
+    {id:259, lv:300, base:"experiment", conj:"experiment, experimented, experimented, experiments, experimenting", ex:"I experiment with it.", trans:"私はそれで実験する。"},
+    {id:260, lv:300, base:"expire", conj:"expire, expired, expired, expires, expiring", ex:"It expires today.", trans:"それは今日で期限が切れる。"},
+    {id:261, lv:300, base:"exploit", conj:"exploit, exploited, exploited, exploits, exploiting", ex:"I exploit the chance.", trans:"私は機会を最大限に活用する。"},
+    {id:262, lv:300, base:"explore", conj:"explore, explored, explored, explores, exploring", ex:"I explore the area.", trans:"私はその地域を調査する。"},
+    {id:263, lv:300, base:"export", conj:"export, exported, exported, exports, exporting", ex:"I export the goods.", trans:"私は商品を輸出する。"},
+    {id:264, lv:300, base:"expose", conj:"expose, exposed, exposed, exposes, exposing", ex:"I expose the truth.", trans:"私は真実をさらけ出す。"},
+    {id:265, lv:300, base:"extend", conj:"extend, extended, extended, extends, extending", ex:"I extend the deadline.", trans:"私は期限を延長する。"},
+    {id:266, lv:300, base:"extract", conj:"extract, extracted, extracted, extracts, extracting", ex:"I extract the meaning.", trans:"私は意味を抜き出す。"},
+    {id:267, lv:300, base:"fabricate", conj:"fabricate, fabricated, fabricated, fabricates, fabricating", ex:"I fabricate the story.", trans:"私は話をでっち上げる。"},
+    {id:268, lv:300, base:"facilitate", conj:"facilitate, facilitated, facilitated, facilitates, facilitating", ex:"I facilitate progress.", trans:"私は進歩を促進する。"},
+    {id:269, lv:300, base:"finalize", conj:"finalize, finalized, finalized, finalizes, finalizing", ex:"I finalize the plan.", trans:"私は計画を最終決定する。"},
+    {id:270, lv:300, base:"fluctuate", conj:"fluctuate, fluctuated, fluctuated, fluctuates, fluctuating", ex:"Prices fluctuate.", trans:"価格が変動する。"},
+    {id:271, lv:300, base:"formulate", conj:"formulate, formulated, formulated, formulates, formulating", ex:"I formulate a strategy.", trans:"私は戦略を策定する。"},
+    {id:272, lv:300, base:"foster", conj:"foster, fostered, fostered, fosters, fostering", ex:"I foster growth.", trans:"私は成長を促す。"},
+    {id:273, lv:300, base:"guarantee", conj:"guarantee, guaranteed, guaranteed, guarantees, guaranteeing", ex:"I guarantee it.", trans:"私はそれを保証する。"},
+    {id:274, lv:300, base:"highlight", conj:"highlight, highlighted, highlighted, highlights, highlighting", ex:"I highlight the issue.", trans:"私は問題を強調する。"},
+    {id:275, lv:300, base:"illustrate", conj:"illustrate, illustrated, illustrated, illustrates, illustrating", ex:"I illustrate the point.", trans:"私は点を例証する。"},
+    {id:276, lv:300, base:"implement", conj:"implement, implemented, implemented, implements, implementing", ex:"I implement changes.", trans:"私は変更を導入する。"},
+    {id:277, lv:300, base:"imply", conj:"imply, implied, implied, implies, implying", ex:"It implies a threat.", trans:"それは脅威を暗示する。"},
+    {id:278, lv:300, base:"impose", conj:"impose, imposed, imposed, imposes, imposing", ex:"I impose a tax.", trans:"私は税を課す。"},
+    {id:279, lv:300, base:"incorporate", conj:"incorporate, incorporated, incorporated, incorporates, incorporating", ex:"I incorporate the idea.", trans:"私はアイデアを組み込む。"},
+    {id:280, lv:300, base:"induce", conj:"induce, induced, induced, induces, inducing", ex:"It induces sleep.", trans:"それは眠気を誘う。"},
+    {id:281, lv:300, base:"inhibit", conj:"inhibit, inhibited, inhibited, inhibits, inhibiting", ex:"I inhibit growth.", trans:"私は成長を抑制する。"},
+    {id:282, lv:300, base:"initiate", conj:"initiate, initiated, initiated, initiates, initiating", ex:"I initiate the talk.", trans:"私は話し合いを開始する。"},
+    {id:283, lv:300, base:"innovate", conj:"innovate, innovated, innovated, innovates, innovating", ex:"I innovate the tech.", trans:"私は技術を革新する。"},
+    {id:284, lv:300, base:"inspect", conj:"inspect, inspected, inspected, inspects, inspecting", ex:"I inspect the site.", trans:"私は現場を視察する。"},
+    {id:285, lv:300, base:"institute", conj:"institute, instituted, instituted, institutes, instituting", ex:"I institute a policy.", trans:"私は方針を制定する。"},
+    {id:286, lv:300, base:"integrate", conj:"integrate, integrated, integrated, integrates, integrating", ex:"I integrate the system.", trans:"私はシステムを統合する。"},
+    {id:287, lv:300, base:"interpret", conj:"interpret, interpreted, interpreted, interprets, interpreting", ex:"I interpret the law.", trans:"私は法律を解釈する。"},
+    {id:288, lv:300, base:"intervene", conj:"intervene, intervened, intervened, intervenes, intervening", ex:"I intervene now.", trans:"私は今介入する。"},
+    {id:289, lv:300, base:"investigate", conj:"investigate, investigated, investigated, investigates, investigating", ex:"I investigate the case.", trans:"私は事件を捜査する。"},
+    {id:290, lv:300, base:"isolate", conj:"isolate, isolated, isolated, isolates, isolating", ex:"I isolate the factor.", trans:"私は要因を特定する。"},
+    {id:291, lv:300, base:"localize", conj:"localize, localized, localized, localizes, localizing", ex:"I localize the app.", trans:"私はアプリをローカライズする。"},
+    {id:292, lv:300, base:"manufacture", conj:"manufacture, manufactured, manufactured, manufactures, manufacturing", ex:"I manufacture cars.", trans:"私は車を製造する。"},
+    {id:293, lv:300, base:"maximize", conj:"maximize, maximized, maximized, maximizes, maximizing", ex:"I maximize profit.", trans:"私は利益を最大化する。"},
+    {id:294, lv:300, base:"minimize", conj:"minimize, minimized, minimized, minimizes, minimizing", ex:"I minimize the waste.", trans:"私は無駄を最小化する。"},
+    {id:295, lv:300, base:"monitor", conj:"monitor, monitored, monitored, monitors, monitoring", ex:"I monitor the progress.", trans:"私は進捗を監視する。"},
+    {id:296, lv:300, base:"motivate", conj:"motivate, motivated, motivated, motivates, motivating", ex:"I motivate the team.", trans:"私はチームを動機づける。"},
+    {id:297, lv:300, base:"navigate", conj:"navigate, navigated, navigated, navigates, navigating", ex:"I navigate the site.", trans:"私はサイトを回覧する。"},
+    {id:298, lv:300, base:"negotiate", conj:"negotiate, negotiated, negotiated, negotiates, negotiating", ex:"I negotiate terms.", trans:"私は条件を交渉する。"},
+    {id:299, lv:300, base:"neutralize", conj:"neutralize, neutralized, neutralized, neutralizes, neutralizing", ex:"I neutralize the acid.", trans:"私は酸を中和する。"},
+    {id:300, lv:300, base:"normalize", conj:"normalize, normalized, normalized, normalizes, normalizing", ex:"I normalize the data.", trans:"私はデータを正規化する。"},
+    {id:301, lv:400, base:"notify", conj:"notify, notified, notified, notifies, notifying", ex:"I notify the staff.", trans:"私はスタッフに通知する。"},
+    {id:302, lv:400, base:"nurture", conj:"nurture, nurtured, nurtured, nurtures, nurturing", ex:"I nurture talent.", trans:"私は才能を育成する。"},
+    {id:303, lv:400, base:"observe", conj:"observe, observed, observed, observes, observing", ex:"I observe the trend.", trans:"私は傾向を観察する。"},
+    {id:304, lv:400, base:"obtain", conj:"obtain, obtained, obtained, obtains, obtaining", ex:"I obtain the result.", trans:"私は結果を得る。"},
+    {id:305, lv:400, base:"occupy", conj:"occupy, occupied, occupied, occupies, occupying", ex:"It occupies my time.", trans:"それは私の時間を占める。"},
+    {id:306, lv:400, base:"offend", conj:"offend, offended, offended, offends, offending", ex:"I offend nobody.", trans:"私は誰の感情も害さない。"},
+    {id:307, lv:400, base:"offset", conj:"offset, offset, offset, offsets, offsetting", ex:"It offsets the loss.", trans:"それは損失を相殺する。"},
+    {id:308, lv:400, base:"omit", conj:"omit, omitted, omitted, omits, omitting", ex:"I omit the detail.", trans:"私は詳細を省略する。"},
+    {id:309, lv:400, base:"oppose", conj:"oppose, opposed, opposed, opposes, opposing", ex:"I oppose the plan.", trans:"私は計画に反対する。"},
+    {id:310, lv:400, base:"optimize", conj:"optimize, optimized, optimized, optimizes, optimizing", ex:"I optimize the code.", trans:"私はコードを最適化する。"},
+    {id:311, lv:400, base:"originate", conj:"originate, originated, originated, originates, originating", ex:"It originates here.", trans:"それはここから始まる。"},
+    {id:312, lv:400, base:"overcome", conj:"overcome, overcame, overcome, overcomes, overcoming", ex:"I overcome fear.", trans:"私は恐怖を克服する。"},
+    {id:313, lv:400, base:"overlook", conj:"overlook, overlooked, overlooked, overlooks, overlooking", ex:"I overlook the fact.", trans:"私は事実を見落とす。"},
+    {id:314, lv:400, base:"overshadow", conj:"overshadow, overshadowed, overshadowed, overshadows, overshadowing", ex:"It overshadows all.", trans:"それがすべてを覆い隠す。"},
+    {id:315, lv:400, base:"overtake", conj:"overtake, overtook, overtaken, overtakes, overtaking", ex:"I overtake the car.", trans:"私は車を追い越す。"},
+    {id:316, lv:400, base:"participate", conj:"participate, participated, participated, participates, participating", ex:"I participate in it.", trans:"私はそれに関与する。"},
+    {id:317, lv:400, base:"perceive", conj:"perceive, perceived, perceived, perceives, perceiving", ex:"I perceive danger.", trans:"私は危険を感じ取る。"},
+    {id:318, lv:400, base:"perform", conj:"perform, performed, performed, performs, performing", ex:"I perform the duty.", trans:"私は義務を遂行する。"},
+    {id:319, lv:400, base:"permit", conj:"permit, permitted, permitted, permits, permitting", ex:"It permits access.", trans:"それはアクセスを許可する。"},
+    {id:320, lv:400, base:"persuade", conj:"persuade, persuaded, persuaded, persuades, persuading", ex:"I persuade the team.", trans:"私はチームを説得する。"},
+    {id:321, lv:400, base:"populate", conj:"populate, populated, populated, populates, populating", ex:"We populate the city.", trans:"私たちはその街に居住する。"},
+    {id:422, lv:400, base:"predict", conj:"predict, predicted, predicted, predicts, predicting", ex:"I predict a rise.", trans:"私は上昇を予測する。"},
+    {id:323, lv:400, base:"preserve", conj:"preserve, preserved, preserved, preserves, preserving", ex:"I preserve the area.", trans:"私はその地域を保護する。"},
+    {id:324, lv:400, base:"prevail", conj:"prevail, prevailed, prevailed, prevails, prevailing", ex:"Truth will prevail.", trans:"真実が打ち勝つだろう。"},
+    {id:325, lv:400, base:"process", conj:"process, processed, processed, processes, processing", ex:"I process the order.", trans:"私は注文を処理する。"},
+    {id:326, lv:400, base:"proclaim", conj:"proclaim, proclaimed, proclaimed, proclaims, proclaiming", ex:"I proclaim the truth.", trans:"私は真実を公言する。"},
+    {id:327, lv:400, base:"procure", conj:"procure, procured, procured, procures, procuring", ex:"I procure the parts.", trans:"私は部品を調達する。"},
+    {id:328, lv:400, base:"prohibit", conj:"prohibit, prohibited, prohibited, prohibits, prohibiting", ex:"I prohibit smoking.", trans:"私は喫煙を禁止する。"},
+    {id:329, lv:400, base:"project", conj:"project, projected, projected, projects, projecting", ex:"I project the growth.", trans:"私は成長を予測する。"},
+    {id:330, lv:400, base:"proliferate", conj:"proliferate, proliferated, proliferated, proliferates, proliferating", ex:"Ideas proliferate.", trans:"アイデアが急増する。"},
+    {id:331, lv:400, base:"promote", conj:"promote, promoted, promoted, promotes, promoting", ex:"I promote health.", trans:"私は健康を増進する。"},
+    {id:332, lv:400, base:"propel", conj:"propel, propelled, propelled, propels, propelling", ex:"It propels the ship.", trans:"それが船を推進する。"},
+    {id:333, lv:400, base:"prosper", conj:"prosper, prospered, prospered, prospers, prospering", ex:"They prosper now.", trans:"彼らは今繁栄している。"},
+    {id:334, lv:400, base:"provide", conj:"provide, provided, provided, provides, providing", ex:"I provide evidence.", trans:"私は証拠を提示する。"},
+    {id:335, lv:400, base:"provoke", conj:"provoke, provoked, provoked, provokes, provoking", ex:"I provoke a debate.", trans:"私は議論を引き起こす。"},
+    {id:336, lv:400, base:"pursue", conj:"pursue, pursued, pursued, pursues, pursuing", ex:"I pursue the goal.", trans:"私は目標を追求する。"},
+    {id:337, lv:400, base:"quantify", conj:"quantify, quantified, quantified, quantifies, quantifying", ex:"I quantify the risk.", trans:"私はリスクを定量化する。"},
+    {id:338, lv:400, base:"rationalize", conj:"rationalize, rationalized, rationalized, rationalizes, rationalizing", ex:"I rationalize it.", trans:"私はそれを合理化する。"},
+    {id:339, lv:400, base:"rebound", conj:"rebound, rebounded, rebounded, rebounds, rebounding", ex:"It will rebound.", trans:"それは跳ね返るだろう。"},
+    {id:340, lv:400, base:"recall", conj:"recall, recalled, recalled, recalls, recalling", ex:"I recall the past.", trans:"私は過去を回想する。"},
+    {id:341, lv:400, base:"reclaim", conj:"reclaim, reclaimed, reclaimed, reclaims, reclaiming", ex:"I reclaim my right.", trans:"私は権利を取り戻す。"},
+    {id:342, lv:400, base:"reconcile", conj:"reconcile, reconciled, reconciled, reconciles, reconciling", ex:"I reconcile the two.", trans:"私は両者を調和させる。"},
+    {id:343, lv:400, base:"recover", conj:"recover, recovered, recovered, recovers, recovering", ex:"I recover the data.", trans:"私はデータを復旧する。"},
+    {id:344, lv:400, base:"recruit", conj:"recruit, recruited, recruited, recruits, recruiting", ex:"I recruit the staff.", trans:"私はスタッフを採用する。"},
+    {id:345, lv:400, base:"rectify", conj:"rectify, rectified, rectified, rectifies, rectifying", ex:"I rectify the error.", trans:"私は誤りを修正する。"},
+    {id:346, lv:400, base:"refine", conj:"refine, refined, refined, refines, refining", ex:"I refine the method.", trans:"私は方法を洗練する。"},
+    {id:347, lv:400, base:"reform", conj:"reform, reformed, reformed, reforms, reforming", ex:"I reform the system.", trans:"私は制度を改革する。"},
+    {id:348, lv:400, base:"refute", conj:"refute, refuted, refuted, refutes, refuting", ex:"I refute the claim.", trans:"私は主張を論破する。"},
+    {id:349, lv:400, base:"reinforce", conj:"reinforce, reinforced, reinforced, reinforces, reinforcing", ex:"I reinforce the wall.", trans:"私は壁を補強する。"},
+    {id:350, lv:400, base:"reiterate", conj:"reiterate, reiterated, reiterated, reiterates, reiterating", ex:"I reiterate my point.", trans:"私は自分の主張を繰り返す。"},
+    {id:351, lv:400, base:"reject", conj:"reject, rejected, rejected, rejects, rejecting", ex:"I reject the offer.", trans:"私はその申し出を拒絶する。"},
+    {id:352, lv:400, base:"relate", conj:"relate, related, related, relates, relating", ex:"I relate to him.", trans:"私は彼に共感する。"},
+    {id:353, lv:400, base:"release", conj:"release, released, released, releases, releasing", ex:"I release the report.", trans:"私は報告書を公開する。"},
+    {id:354, lv:400, base:"relieve", conj:"relieve, relieved, relieved, relieves, relieving", ex:"I relieve the stress.", trans:"私はストレスを和らげる。"},
+    {id:355, lv:400, base:"relocate", conj:"relocate, relocated, relocated, relocates, relocating", ex:"I relocate the office.", trans:"私はオフィスを移転する。"},
+    {id:356, lv:400, base:"rely", conj:"rely, relied, relied, relies, relying", ex:"I rely on you.", trans:"私はあなたを頼りにする。"},
+    {id:357, lv:400, base:"remain", conj:"remain, remained, remained, remains, remaining", ex:"I remain silent.", trans:"私は黙ったままでいる。"},
+    {id:358, lv:400, base:"remedy", conj:"remedy, remedied, remedied, remedies, remedying", ex:"I remedy the flaw.", trans:"私は欠陥を修復する。"},
+    {id:359, lv:400, base:"render", conj:"render, rendered, rendered, renders, rendering", ex:"It renders help.", trans:"それは助けを与える。"},
+    {id:360, lv:400, base:"renew", conj:"renew, renewed, renewed, renews, renewing", ex:"I renew my license.", trans:"私は免許を更新する。"},
+    {id:361, lv:400, base:"renounce", conj:"renounce, renounced, renounced, renounces, renouncing", ex:"I renounce my claim.", trans:"私は権利を放棄する。"},
+    {id:362, lv:400, base:"reorganize", conj:"reorganize, reorganized, reorganized, reorganizes, reorganizing", ex:"I reorganize the team.", trans:"私はチームを再編成する。"},
+    {id:363, lv:400, base:"repair", conj:"repair, repaired, repaired, repairs, repairing", ex:"I repair the machine.", trans:"私は機械を修理する。"},
+    {id:364, lv:400, base:"repeal", conj:"repeal, repealed, repealed, repeals, repealing", ex:"I repeal the law.", trans:"私は法律を廃止する。"},
+    {id:365, lv:400, base:"replace", conj:"replace, replaced, replaced, replaces, replacing", ex:"I replace the staff.", trans:"私はスタッフを入れ替える。"},
+    {id:366, lv:400, base:"replenish", conj:"replenish, replenished, replenished, replenishes, replenishing", ex:"I replenish supply.", trans:"私は供給を補充する。"},
+    {id:367, lv:400, base:"replicate", conj:"replicate, replicated, replicated, replicates, replicating", ex:"I replicate the test.", trans:"私は実験を再現する。"},
+    {id:368, lv:400, base:"represent", conj:"represent, represented, represented, represents, representing", ex:"I represent the firm.", trans:"私は会社を代表する。"},
+    {id:369, lv:400, base:"reproduce", conj:"reproduce, reproduced, reproduced, reproduces, reproducing", ex:"I reproduce the sound.", trans:"私は音を再生する。"},
+    {id:370, lv:400, base:"require", conj:"require, required, required, requires, requiring", ex:"I require help.", trans:"私は助けを必要とする。"},
+    {id:371, lv:400, base:"rescue", conj:"rescue, rescued, rescued, rescues, rescuing", ex:"I rescue the cat.", trans:"私は猫を救助する。"},
+    {id:372, lv:400, base:"research", conj:"research, researched, researched, researches, researching", ex:"I research history.", trans:"私は歴史を研究する。"},
+    {id:373, lv:400, base:"resemble", conj:"resemble, resembled, resembled, resembles, resembling", ex:"I resemble my dad.", trans:"私は父に似ている。"},
+    {id:374, lv:400, base:"resent", conj:"resent, resented, resented, resents, resenting", ex:"I resent the remark.", trans:"私はその発言を不快に思う。"},
+    {id:375, lv:400, base:"reserve", conj:"reserve, reserved, reserved, reserves, reserving", ex:"I reserve a table.", trans:"私は席を予約する。"},
+    {id:376, lv:400, base:"reside", conj:"reside, resided, resided, resides, residing", ex:"I reside in NY.", trans:"私はNYに住んでいる。"},
+    {id:377, lv:400, base:"resign", conj:"resign, resigned, resigned, resigns, resigning", ex:"I resign my post.", trans:"私は役職を辞任する。"},
+    {id:378, lv:400, base:"resist", conj:"resist, resisted, resisted, resists, resisting", ex:"I resist the urge.", trans:"私は衝動に抵抗する。"},
+    {id:379, lv:400, base:"resolve", conj:"resolve, resolved, resolved, resolves, resolving", ex:"I resolve the issue.", trans:"私は問題を解決する。"},
+    {id:380, lv:400, base:"respond", conj:"respond, responded, responded, responds, responding", ex:"I respond to emails.", trans:"私はメールに返信する。"},
+    {id:381, lv:400, base:"restore", conj:"restore, restored, restored, restores, restoring", ex:"I restore order.", trans:"私は秩序を回復する。"},
+    {id:382, lv:400, base:"restrict", conj:"restrict, restricted, restricted, restricts, restricting", ex:"I restrict access.", trans:"私はアクセスを制限する。"},
+    {id:383, lv:400, base:"result", conj:"result, resulted, resulted, results, resulting", ex:"It results in loss.", trans:"それは損失をもたらす。"},
+    {id:384, lv:400, base:"resume", conj:"resume, resumed, resumed, resumes, resuming", ex:"I resume the talk.", trans:"私は話を再開する。"},
+    {id:385, lv:400, base:"retain", conj:"retain, retained, retained, retains, retaining", ex:"I retain the info.", trans:"私は情報を保持する。"},
+    {id:386, lv:400, base:"retire", conj:"retire, retired, retired, retires, retiring", ex:"I retire at 60.", trans:"私は60歳で引退する。"},
+    {id:387, lv:400, base:"retrieve", conj:"retrieve, retrieved, retrieved, retrieves, retrieving", ex:"I retrieve the files.", trans:"私はファイルを検索する。"},
+    {id:388, lv:400, base:"reveal", conj:"reveal, revealed, revealed, reveals, revealing", ex:"I reveal the truth.", trans:"私は真実を明かす。"},
+    {id:389, lv:400, base:"reverse", conj:"reverse, reversed, reversed, reverses, reversing", ex:"I reverse the flow.", trans:"私は流れを逆転させる。"},
+    {id:390, lv:400, base:"revise", conj:"revise, revised, revised, revises, revising", ex:"I revise the plan.", trans:"私は計画を改訂する。"},
+    {id:391, lv:400, base:"revive", conj:"revive, revived, revived, revives, reviving", ex:"I revive the hope.", trans:"私は希望をよみがえらせる。"},
+    {id:392, lv:400, base:"revoke", conj:"revoke, revoked, revoked, revokes, revoking", ex:"I revoke the order.", trans:"私は命令を取り消す。"},
+    {id:393, lv:400, base:"rotate", conj:"rotate, rotated, rotated, rotates, rotating", ex:"I rotate the disc.", trans:"私は円盤を回転させる。"},
+    {id:394, lv:400, base:"sacrifice", conj:"sacrifice, sacrificed, sacrificed, sacrifices, sacrificing", ex:"I sacrifice time.", trans:"私は時間を犠牲にする。"},
+    {id:395, lv:400, base:"satisfy", conj:"satisfy, satisfied, satisfied, satisfies, satisfying", ex:"I satisfy the need.", trans:"私は要求を満たす。"},
+    {id:396, lv:400, base:"scrutinize", conj:"scrutinize, scrutinized, scrutinized, scrutinizes, scrutinizing", ex:"I scrutinize data.", trans:"私はデータを精査する。"},
+    {id:397, lv:400, base:"secure", conj:"secure, secured, secured, secures, securing", ex:"I secure the deal.", trans:"私は契約を確保する。"},
+    {id:398, lv:400, base:"segment", conj:"segment, segmented, segmented, segments, segmenting", ex:"I segment the market.", trans:"私は市場を細分化する。"},
+    {id:399, lv:400, base:"select", conj:"select, selected, selected, selects, selecting", ex:"I select the best.", trans:"私は最良のものを選ぶ。"},
+    {id:400, lv:400, base:"simulate", conj:"simulate, simulated, simulated, simulates, simulating", ex:"I simulate the event.", trans:"私は事象をシミュレートする。"},
+    {id:401, lv:500, base:"speculate", conj:"speculate, speculated, speculated, speculates, speculating", ex:"I speculate the cause.", trans:"私は原因を推測する。"},
+    {id:402, lv:500, base:"stabilize", conj:"stabilize, stabilized, stabilized, stabilizes, stabilizing", ex:"I stabilize the price.", trans:"私は価格を安定させる。"},
+    {id:403, lv:500, base:"stimulate", conj:"stimulate, stimulated, stimulated, stimulates, stimulating", ex:"I stimulate demand.", trans:"私は需要を刺激する。"},
+    {id:404, lv:500, base:"stipulate", conj:"stipulate, stipulated, stipulated, stipulates, stipulating", ex:"I stipulate the term.", trans:"私は条件を規定する。"},
+    {id:405, lv:500, base:"strengthen", conj:"strengthen, strengthened, strengthened, strengthens, strengthening", ex:"I strengthen ties.", trans:"私は絆を強める。"},
+    {id:406, lv:500, base:"structure", conj:"structure, structured, structured, structures, structuring", ex:"I structure the report.", trans:"私は報告書を構成する。"},
+    {id:407, lv:500, base:"substantiate", conj:"substantiate, substantiated, substantiated, substantiates, substantiating", ex:"I substantiate the claim.", trans:"私は主張を立証する。"},
+    {id:408, lv:500, base:"substitute", conj:"substitute, substituted, substituted, substitutes, substituting", ex:"I substitute the part.", trans:"私は部品を代替する。"},
+    {id:409, lv:500, base:"succeed", conj:"succeed, succeeded, succeeded, succeeds, succeeding", ex:"I succeed him.", trans:"私は彼（の地位）を継ぐ。"},
+    {id:410, lv:500, base:"summarize", conj:"summarize, summarized, summarized, summarizes, summarizing", ex:"I summarize the talk.", trans:"私は話を要約する。"},
+    {id:411, lv:500, base:"supplement", conj:"supplement, supplemented, supplemented, supplements, supplementing", ex:"I supplement the income.", trans:"私は収入を補う。"},
+    {id:412, lv:500, base:"surpass", conj:"surpass, surpassed, surpassed, surpasses, surpassing", ex:"I surpass the goal.", trans:"私は目標を上回る。"},
+    {id:413, lv:500, base:"survey", conj:"survey, surveyed, surveyed, surveys, surveying", ex:"I survey the land.", trans:"私は土地を測量する。"},
+    {id:414, lv:500, base:"suspend", conj:"suspend, suspended, suspended, suspends, suspending", ex:"I suspend the service.", trans:"私はサービスを中断する。"},
+    {id:415, lv:500, base:"sustain", conj:"sustain, sustained, sustained, sustains, sustaining", ex:"I sustain the effort.", trans:"私は努力を維持する。"},
+    {id:416, lv:500, base:"synthesize", conj:"synthesize, synthesized, synthesized, synthesizes, synthesizing", ex:"I synthesize the facts.", trans:"私は事実を統合する。"},
+    {id:417, lv:500, base:"target", conj:"target, targeted, targeted, targets, targeting", ex:"I target the group.", trans:"私はその層をターゲットにする。"},
+    {id:418, lv:500, base:"terminate", conj:"terminate, terminated, terminated, terminates, terminating", ex:"I terminate the link.", trans:"私はリンクを終了する。"},
+    {id:419, lv:500, base:"tolerate", conj:"tolerate, tolerated, tolerated, tolerates, tolerating", ex:"I tolerate the delay.", trans:"私は遅延を許容する。"},
+    {id:420, lv:500, base:"trace", conj:"trace, traced, traced, traces, tracing", ex:"I trace the origin.", trans:"私は起源をたどる。"},
+    {id:421, lv:500, base:"track", conj:"track, tracked, tracked, tracks, tracking", ex:"I track the shipment.", trans:"私は貨物を追跡する。"},
+    {id:422, lv:500, base:"transcend", conj:"transcend, transcended, transcended, transcends, transcending", ex:"I transcend barriers.", trans:"私は障壁を越える。"},
+    {id:423, lv:500, base:"transfer", conj:"transfer, transferred, transferred, transfers, transferring", ex:"I transfer the data.", trans:"私はデータを転送する。"},
+    {id:424, lv:500, base:"transform", conj:"transform, transformed, transformed, transforms, transforming", ex:"I transform the area.", trans:"私はその地域を一変させる。"},
+    {id:425, lv:500, base:"translate", conj:"translate, translated, translated, translates, translating", ex:"I translate the text.", trans:"私は文章を翻訳する。"},
+    {id:426, lv:500, base:"transmit", conj:"transmit, transmitted, transmitted, transmits, transmitting", ex:"I transmit the signal.", trans:"私は信号を送信する。"},
+    {id:427, lv:500, base:"transplant", conj:"transplant, transplanted, transplanted, transplants, transplanting", ex:"I transplant the tree.", trans:"私は木を移植する。"},
+    {id:428, lv:500, base:"transport", conj:"transport, transported, transported, transports, transporting", ex:"I transport the goods.", trans:"私は商品を輸送する。"},
+    {id:429, lv:500, base:"traverse", conj:"traverse, traversed, traversed, traverses, traversing", ex:"I traverse the desert.", trans:"私は砂漠を横断する。"},
+    {id:430, lv:500, base:"trigger", conj:"trigger, triggered, triggered, triggers, triggering", ex:"I trigger the alarm.", trans:"私は警報を作動させる。"},
+    {id:431, lv:500, base:"underestimate", conj:"underestimate, underestimated, underestimated, underestimates, underestimating", ex:"I underestimate cost.", trans:"私はコストを過小評価する。"},
+    {id:432, lv:500, base:"undergo", conj:"undergo, underwent, undergone, undergoes, undergoing", ex:"I undergo the test.", trans:"私は試験を受ける。"},
+    {id:433, lv:500, base:"underline", conj:"underline, underlined, underlined, underlines, underlining", ex:"I underline the need.", trans:"私はその必要性を強調する。"},
+    {id:434, lv:500, base:"undermine", conj:"undermine, undermined, undermined, undermines, undermining", ex:"I undermine his plan.", trans:"私は彼の計画を台無しにする。"},
+    {id:435, lv:500, base:"undertake", conj:"undertake, undertook, undertaken, undertakes, undertaking", ex:"I undertake the job.", trans:"私は仕事を引き受ける。"},
+    {id:436, lv:500, base:"unify", conj:"unify, unified, unified, unifies, unifying", ex:"I unify the systems.", trans:"私はシステムを統一する。"},
+    {id:437, lv:500, base:"update", conj:"update, updated, updated, updates, updating", ex:"I update the records.", trans:"私は記録を更新する。"},
+    {id:438, lv:500, base:"upgrade", conj:"upgrade, upgraded, upgraded, upgrades, upgrading", ex:"I upgrade the gear.", trans:"私は装備をアップグレードする。"},
+    {id:439, lv:500, base:"uphold", conj:"uphold, upheld, upheld, upholds, upholding", ex:"I uphold the law.", trans:"私は法律を支持する。"},
+    {id:440, lv:500, base:"urge", conj:"urge, urged, urged, urges, urging", ex:"I urge caution.", trans:"私は慎重さを促す。"},
+    {id:441, lv:500, base:"utilize", conj:"utilize, utilized, utilized, utilizes, utilizing", ex:"I utilize the tool.", trans:"私は道具を活用する。"},
+    {id:442, lv:500, base:"validate", conj:"validate, validated, validated, validates, validating", ex:"I validate the entry.", trans:"私は入力を検証する。"},
+    {id:443, lv:500, base:"value", conj:"value, valued, valued, values, valuing", ex:"I value your input.", trans:"私はあなたの意見を尊重する。"},
+    {id:444, lv:500, base:"vanish", conj:"vanish, vanished, vanished, vanishes, vanishing", ex:"It vanishes now.", trans:"それは今消え去る。"},
+    {id:445, lv:500, base:"vary", conj:"vary, varied, varied, varies, varying", ex:"Results vary.", trans:"結果は変動する。"},
+    {id:446, lv:500, base:"verify", conj:"verify, verified, verified, verifies, verifying", ex:"I verify the fact.", trans:"私は事実を確かめる。"},
+    {id:447, lv:500, base:"violate", conj:"violate, violated, violated, violates, violating", ex:"I violate the rule.", trans:"私はルールに違反する。"},
+    {id:448, lv:500, base:"visualize", conj:"visualize, visualized, visualized, visualizes, visualizing", ex:"I visualize success.", trans:"私は成功を思い描く。"},
+    {id:449, lv:500, base:"warrant", conj:"warrant, warranted, warranted, warrants, warranting", ex:"It warrants action.", trans:"それは行動を正当化する。"},
+    {id:450, lv:500, base:"yield", conj:"yield, yielded, yielded, yields, yielding", ex:"It yields result.", trans:"それは結果を生む。"},
+    {id:451, lv:500, base:"abide", conj:"abide, abode/abided, abode/abided, abides, abiding", ex:"I abide by the rule.", trans:"私はルールに従う。"},
+    {id:452, lv:500, base:"absent", conj:"absent, absented, absented, absents, absenting", ex:"I absent myself.", trans:"私は欠席する。"},
+    {id:453, lv:500, base:"absolve", conj:"absolve, absolved, absolved, absolves, absolving", ex:"I absolve you.", trans:"私はあなたを免罪する。"},
+    {id:454, lv:500, base:"abstain", conj:"abstain, abstained, abstained, abstains, abstaining", ex:"I abstain from wine.", trans:"私は酒を控える。"},
+    {id:455, lv:500, base:"accelerate", conj:"accelerate, accelerated, accelerated, accelerates, accelerating", ex:"I accelerate growth.", trans:"私は成長を加速させる。"},
+    {id:456, lv:500, base:"accentuate", conj:"accentuate, accentuated, accentuated, accentuates, accentuating", ex:"I accentuate the need.", trans:"私はその必要性を強調する。"},
+    {id:457, lv:500, base:"accommodate", conj:"accommodate, accommodated, accommodated, accommodates, accommodating", ex:"I accommodate you.", trans:"私はあなたに対応する。"},
+    {id:458, lv:500, base:"accomplish", conj:"accomplish, accomplished, accomplished, accomplishes, accomplishing", ex:"I accomplish the task.", trans:"私は任務を成し遂げる。"},
+    {id:459, lv:500, base:"accumulate", conj:"accumulate, accumulated, accumulated, accumulates, accumulating", ex:"I accumulate wealth.", trans:"私は富を蓄積する。"},
+    {id:460, lv:500, base:"accustom", conj:"accustom, accustomed, accustomed, accustoms, accustoming", ex:"I accustom to it.", trans:"私はそれに慣れる。"},
+    {id:461, lv:500, base:"acknowledge", conj:"acknowledge, acknowledged, acknowledged, acknowledges, acknowledging", ex:"I acknowledge the fact.", trans:"私は事実を認める。"},
+    {id:462, lv:500, base:"acquiesce", conj:"acquiesce, acquiesced, acquiesced, acquiesces, acquiescing", ex:"I acquiesce in this.", trans:"私はこれに黙従する。"},
+    {id:463, lv:500, base:"activate", conj:"activate, activated, activated, activates, activating", ex:"I activate the system.", trans:"私はシステムを起動する。"},
+    {id:464, lv:500, base:"adapt", conj:"adapt, adapted, adapted, adapts, adapting", ex:"I adapt the plan.", trans:"私は計画を適合させる。"},
+    {id:465, lv:500, base:"adhere", conj:"adhere, adhered, adhered, adheres, adhering", ex:"I adhere to the policy.", trans:"私は方針を固守する。"},
+    {id:466, lv:500, base:"adjourn", conj:"adjourn, adjourned, adjourned, adjourns, adjourning", ex:"I adjourn the meeting.", trans:"私は会議を閉会する。"},
+    {id:467, lv:500, base:"administer", conj:"administer, administered, administered, administers, administering", ex:"I administer the test.", trans:"私は試験を管理する。"},
+    {id:468, lv:500, base:"admonish", conj:"admonish, admonished, admonished, admonishes, admonishing", ex:"I admonish him.", trans:"私は彼を諭す。"},
+    {id:469, lv:500, base:"advocate", conj:"advocate, advocated, advocated, advocates, advocating", ex:"I advocate peace.", trans:"私は平和を提唱する。"},
+    {id:470, lv:500, base:"affect", conj:"affect, affected, affected, affects, affecting", ex:"It affects us all.", trans:"それは私たち全員に影響する。"},
+    {id:471, lv:500, base:"affiliate", conj:"affiliate, affiliated, affiliated, affiliates, affiliating", ex:"I affiliate with them.", trans:"私は彼らと提携する。"},
+    {id:472, lv:500, base:"affirm", conj:"affirm, affirmed, affirmed, affirms, affirming", ex:"I affirm the truth.", trans:"私は真実を断言する。"},
+    {id:473, lv:500, base:"aggravate", conj:"aggravate, aggravated, aggravated, aggravates, aggravating", ex:"I aggravate the wound.", trans:"私は傷を悪化させる。"},
+    {id:474, lv:500, base:"alleviate", conj:"alleviate, alleviated, alleviated, alleviates, alleviating", ex:"I alleviate the pain.", trans:"私は痛みを和らげる。"},
+    {id:475, lv:500, base:"allocate", conj:"allocate, allocated, allocated, allocates, allocating", ex:"I allocate resources.", trans:"私は資源を配分する。"},
+    {id:476, lv:500, base:"amend", conj:"amend, amended, amended, amends, amending", ex:"I amend the contract.", trans:"私は契約を修正する。"},
+    {id:477, lv:500, base:"amplify", conj:"amplify, amplified, amplified, amplifies, amplifying", ex:"I amplify the signal.", trans:"私は信号を増幅する。"},
+    {id:478, lv:500, base:"anticipate", conj:"anticipate, anticipated, anticipated, anticipates, anticipating", ex:"I anticipate trouble.", trans:"私は問題を予期する。"},
+    {id:479, lv:500, base:"apologize", conj:"apologize, apologized, apologized, apologizes, apologizing", ex:"I apologize for it.", trans:"私はそれを謝罪する。"},
+    {id:480, lv:500, base:"appease", conj:"appease, appeased, appeased, appeases, appeasing", ex:"I appease the crowd.", trans:"私は群衆をなだめる。"},
+    {id:481, lv:500, base:"apply", conj:"apply, applied, applied, applies, applying", ex:"I apply the law.", trans:"私は法を適用する。"},
+    {id:482, lv:500, base:"appoint", conj:"appoint, appointed, appointed, appoints, appointing", ex:"I appoint the leader.", trans:"私はリーダーを指名する。"},
+    {id:483, lv:500, base:"appraise", conj:"appraise, appraised, appraised, appraises, appraising", ex:"I appraise the house.", trans:"私は家を鑑定する。"},
+    {id:484, lv:500, base:"appreciate", conj:"appreciate, appreciated, appreciated, appreciates, appreciating", ex:"I appreciate it.", trans:"私はそれを感謝する。"},
+    {id:485, lv:500, base:"appropriate", conj:"appropriate, appropriated, appropriated, appropriates, appropriating", ex:"I appropriate funds.", trans:"私は資金を充当する。"},
+    {id:486, lv:500, base:"arbitrate", conj:"arbitrate, arbitrated, arbitrated, arbitrates, arbitrating", ex:"I arbitrate the case.", trans:"私は事件を調停する。"},
+    {id:487, lv:500, base:"ascertain", conj:"ascertain, ascertained, ascertained, ascertains, ascertaining", ex:"I ascertain the facts.", trans:"私は事実を確かめる。"},
+    {id:488, lv:500, base:"articulate", conj:"articulate, articulated, articulated, articulates, articulating", ex:"I articulate the goal.", trans:"私は目標を明確に述べる。"},
+    {id:489, lv:500, base:"ascribe", conj:"ascribe, ascribed, ascribed, ascribes, ascribing", ex:"I ascribe it to luck.", trans:"私はそれを運のおかげとする。"},
+    {id:490, lv:500, base:"assail", conj:"assail, assailed, assailed, assails, assailing", ex:"I assail the argument.", trans:"私は議論を攻撃する。"},
+    {id:491, lv:500, base:"assimilate", conj:"assimilate, assimilated, assimilated, assimilates, assimilating", ex:"I assimilate knowledge.", trans:"私は知識を吸収する。"},
+    {id:492, lv:500, base:"associate", conj:"associate, associated, associated, associates, associating", ex:"I associate with him.", trans:"私は彼と付き合う。"},
+    {id:493, lv:500, base:"assure", conj:"assure, assured, assured, assures, assuring", ex:"I assure you.", trans:"私はあなたを保証する。"},
+    {id:494, lv:500, base:"attain", conj:"attain, attained, attained, attains, attaining", ex:"I attain the level.", trans:"私はその水準に達する。"},
+    {id:495, lv:500, base:"attribute", conj:"attribute, attributed, attributed, attributes, attributing", ex:"I attribute it to you.", trans:"私はそれをあなたに起因させる。"},
+    {id:496, lv:500, base:"authorize", conj:"authorize, authorized, authorized, authorizes, authorizing", ex:"I authorize the move.", trans:"私は移動を認可する。"},
+    {id:497, lv:500, base:"avert", conj:"avert, averted, averted, averts, averting", ex:"I avert the crisis.", trans:"私は危機を回避する。"},
+    {id:498, lv:500, base:"bewilder", conj:"bewilder, bewildered, bewildered, bewilders, bewildering", ex:"I bewilder them.", trans:"私は彼らを当惑させる。"},
+    {id:499, lv:500, base:"calculate", conj:"calculate, calculated, calculated, calculates, calculating", ex:"I calculate the odds.", trans:"私は確率を計算する。"},
+    {id:500, lv:500, base:"finalize", conj:"finalize, finalized, finalized, finalizes, finalizing", ex:"I finalize the goal.", trans:"私は目標を確定させる。"}
+];
+    
+    let userStats = JSON.parse(localStorage.getItem('mv500_stats')) || {};
+    let currentMode = { lv: 100, view: 'list' };
+
+function showLevelList(lv, view = 'list') {
+        currentMode = { lv: lv, view: view };
+        // 修正箇所：タイトルをシンプルに統合
+        let html = `<h3>Lv${lv} ${levels[lv]}</h3>`;
+        
+        if (view === 'list') {
+            // level-desc の要素は削除しました
+            allVerbs.filter(v => v.lv === lv).forEach(v => {
+                const s = userStats[v.id] || '';
+                html += `<div class="card">
+                    <div class="verb-header">${v.id}. ${v.base}</div>
+                    <span class="conj-text">(${v.conj})</span>
+                    <div class="example-line">
+                        <span class="example-text">${v.ex}</span>
+                        <div class="action-group">
+                            <div class="eval-btns">
+                                <button class="${s==='✕'?'active':''}" onclick="toggleEval(${v.id}, '✕')">✕</button>
+                                <button class="${s==='△'?'active':''}" onclick="toggleEval(${v.id}, '△')">△</button>
+                                <button class="${s==='◯'?'active':''}" onclick="toggleEval(${v.id}, '◯')">◯</button>
+                            </div>
+                            <button class="ja-btn" onclick="toggleJa(${v.id})">和訳</button>
+                        </div>
+                    </div>
+                    <div id="ja-${v.id}" class="ja">${v.trans}</div>
+                </div>`;
+            });
+        } else {
+            // 一覧表示時も同じタイトルが出るようにします
+            allVerbs.filter(v => v.lv === lv).forEach(v => {
+                html += `<div class="list-item">${v.id}. ${v.base}</div>`;
+            });
+        }
+        document.getElementById('wordList').innerHTML = html;
+        updateStatsDisplay();
+    }
+
+    function toggleView(lv) {
+        if (currentMode.lv === lv && currentMode.view === 'index') showLevelList(lv, 'list');
+        else showLevelList(lv, 'index');
+    }
+
+    function toggleEval(id, status) {
+        if (userStats[id] === status) delete userStats[id];
+        else userStats[id] = status;
+        localStorage.setItem('mv500_stats', JSON.stringify(userStats));
+        showLevelList(currentMode.lv, 'list');
+    }
+
+    function updateStatsDisplay() {
+        let counts = { '✕': 0, '△': 0, '◯': 0 };
+        Object.values(userStats).forEach(s => { if(counts[s] !== undefined) counts[s]++; });
+        const done = Object.keys(userStats).length;
+        document.getElementById('statusBox').innerHTML = `
+            <div class="status-btn" style="color:#fd9644;">✕ ${counts['✕']}</div>
+            <div class="status-btn" style="color:#2ed573;">△ ${counts['△']}</div>
+            <div class="status-btn" style="color:#70a1ff;">◯ ${counts['◯']}</div>
+            <div class="status-btn" style="color:#ff4757;">未 ${allVerbs.length - done}</div>
+        `;
+    }
+
+    function toggleJa(id) {
+        const el = document.getElementById('ja-' + id);
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function showHelp() { alert("使い方：Lvボタンで詳細学習、？で一覧表示。再度？で詳細学習に戻ります。評価ボタンはトグル式で、押すごとに記録/未評価が切り替わります。"); }
+
+    [100, 200, 300, 400, 500].forEach(l => {
+        document.getElementById('levelGrid').innerHTML += `<div class="level-col">
+            <button style="background:var(--lv${l/100});" onclick="showLevelList(${l}, 'list')">Lv${l}</button>
+            <button class="hint-btn" onclick="toggleView(${l})">?</button>
+        </div>`;
+    });
+    
+    showLevelList(100);
+</script>
+</body>
+</html>
